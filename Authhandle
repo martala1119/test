@@ -1,0 +1,113 @@
+public with sharing class Authhandle {
+    static Id Record_ID;
+
+    @AuraEnabled(cacheable=false)
+    public static String geturl(Id recordId){
+        Record_ID=recordId;
+       String apiredirecturl;
+        System.debug('reecord id getting from lwc -------->'+recordId);
+        System.debug('consumer id is -------->'+System.Label.consumerid);
+         System.debug('redirecturl is -------->'+System.Label.redirecturl);
+        
+          Org__c orgRecord = [Select DomainUrl__c from  Org__c where Id=:recordId];
+       // String clientID = 'your_client_id';
+       // String clientSecret = 'your_client_secret';
+        String redirectURI ='https://abcd634-dev-ed.develop.my.salesforce.com//lightning/cmp/c__authenticatepage';//call back url in my connected app 
+        
+        // String authorizationEndpoint = 'https://login.salesforce.com/services/oauth2/authorize';
+              String scope = 'api';
+          //    String state = 'some_random_state_value';
+         //String codeChallenge = 'some_code_challenge_value';
+ 
+        // Build the authorization request URL
+        String authRequestUrl =orgRecord.DomainUrl__c +'/services/oauth2/authorize'+'?response_type=code'+'&client_id='+System.Label.consumerid+'&redirect_uri='+System.Label.redirecturl;
+         System.debug('authRequestUrl---------->'+authRequestUrl);
+     // callout to the authorization endpoint
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(authRequestUrl);
+         req.setMethod('GET');
+        
+          Http http = new Http();
+            HttpResponse res = http.send(req);
+ 
+   System.debug('statuscode is ------->'+res.getStatusCode());
+        if(res.getStatusCode()==302){
+            apiredirecturl=res.getHeader('Location');
+             System.debug(res.getHeader('Location'));            
+        }
+        /*
+    if (res.getStatusCode() == 200) {
+    String responseBody = res.getBody();
+    
+   } else {
+   
+   }   */
+        return apiredirecturl;
+    }
+    
+     @AuraEnabled(cacheable=false)
+    
+    public static String updateurl(){
+          String reuestbody= 'https://login.salesforce.com/services/oauth2/authorize?response_type=code&'+System.Label.consumerid+'&redirect_uri='+System.Label.redirecturl;
+           return reuestbody;
+    }
+    
+    
+    
+    
+    /*
+    
+      @AuraEnabled(cacheable=true)
+    public static String giveurltolwc(){
+        return '/services/oauth2/authorize?response_type=code&client_id=3MVG9k02hQhyUgQDyFbANomPFNyfWwhCKLbS4oHi3LU7a6KflixCqcpddeacUY.PMx01K3kxySRveHqLj4Pcw&redirect_uri=https://abcd634-dev-ed.develop.my.salesforce.com/lightning/cmp/c__authenticatepage';
+    }
+
+     @AuraEnabled(cacheable=false)
+    public static void getrecordid(Id recordId){
+        RecordId=recordId;
+        System.debug('current id from lwc ------->'+recordId);
+    }
+    
+    
+    
+    @AuraEnabled(cacheable=false)
+    public static void getAccessTokenFromCode(String code) {
+
+        Org__c orgRecord = [Select AccessToken__c,RefreshToken__c,DomainUrl__c from Org__c where Id=:Record_ID  ];
+
+        
+       
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(orgRecord.DomainUrl__c + '/services/oauth2/token');
+        req.setMethod('POST');
+        req.setHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        String body = 'grant_type=authorization_code'
+            + '&code=' + EncodingUtil.urlEncode(code, 'UTF-8')
+            + '&client_id=' + EncodingUtil.urlEncode(clientId, 'UTF-8')
+            + '&client_secret=' + EncodingUtil.urlEncode(clientSecret, 'UTF-8')
+            + '&redirect_uri=' + EncodingUtil.urlEncode(redirectUri, 'UTF-8');
+
+        req.setBody(body);
+
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+         System.debug('Status code of my response --------->'+res.getStatusCode());
+        if (res.getStatusCode() == 200) {
+            Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+            
+            orgRecord.AccessToken__c = (String)responseMap.get('access_token');
+            System.debug('acess token from api--------->'+orgRecord.AccessToken__c);
+            orgRecord.RefreshToken__c = (String)responseMap.get('refresh_token');
+            System.debug('refresh token from api--------->'+orgRecord.RefreshToken__c);
+            orgRecord.DomainUrl__c = (String)responseMap.get('instance_url');
+            System.debug('current record domain url   from api--------->'+ orgRecord.DomainUrl__c);
+            update orgRecord;
+        } 
+    }
+*/ 
+     @AuraEnabled(cacheable=false)
+    public static void getacessToken(){
+        
+    }
+}
